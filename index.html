@@ -709,9 +709,135 @@ ${signatory}`;
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
             
-            // [Include all PDF generation code from original]
-            // ... PDF generation code ...
+            // PDF generation settings
+            const leftMargin = 25;
+            const rightMargin = 25;
+            const topMargin = 25;
+            const bottomMargin = 25;
+            const pageWidth = doc.internal.pageSize.width;
+            const pageHeight = doc.internal.pageSize.height;
+            const contentWidth = pageWidth - leftMargin - rightMargin;
             
+            let yPos = topMargin;
+            const lineHeight = 5;
+            const paragraphSpacing = 8;
+            
+            // Set font
+            doc.setFontSize(11);
+            doc.setFont("helvetica", "normal");
+            
+            // Process text line by line
+            const lines = memoText.split('\n');
+            
+            lines.forEach((line, index) => {
+                // Check if we need a new page
+                if (yPos > pageHeight - bottomMargin) {
+                    doc.addPage();
+                    yPos = topMargin;
+                }
+                
+                // Handle header (company name and address)
+                if (index < 4 && (line.includes('Sincerely Yours') || line.includes('Taylor Oballa') || 
+                    line.includes('171 East') || line.includes('Toronto'))) {
+                    doc.setFont("helvetica", "normal");
+                    doc.text(line, leftMargin, yPos);
+                    yPos += lineHeight;
+                }
+                // Handle Date line
+                else if (line.startsWith('Date:')) {
+                    yPos += paragraphSpacing;
+                    doc.text(line, leftMargin, yPos);
+                    yPos += lineHeight;
+                }
+                // Handle VIA EMAIL line
+                else if (line.startsWith('VIA EMAIL:')) {
+                    yPos += paragraphSpacing;
+                    doc.text(line, leftMargin, yPos);
+                    yPos += lineHeight;
+                }
+                // Handle numbered sections
+                else if (/^\d+\./.test(line)) {
+                    yPos += paragraphSpacing;
+                    // Extract number and label
+                    const match = line.match(/^(\d+\.\s)([^:]+:)(.*)/);
+                    if (match) {
+                        const number = match[1];
+                        const label = match[2];
+                        const content = match[3];
+                        
+                        // Draw number
+                        doc.setFont("helvetica", "normal");
+                        doc.text(number, leftMargin, yPos);
+                        
+                        // Draw label in bold with underline
+                        const numberWidth = doc.getTextWidth(number);
+                        doc.setFont("helvetica", "bold");
+                        doc.text(label, leftMargin + numberWidth, yPos);
+                        const labelWidth = doc.getTextWidth(label);
+                        doc.line(leftMargin + numberWidth, yPos + 0.5, leftMargin + numberWidth + labelWidth, yPos + 0.5);
+                        
+                        // Draw content
+                        doc.setFont("helvetica", "normal");
+                        const remainingText = content;
+                        const splitText = doc.splitTextToSize(remainingText, contentWidth - numberWidth - labelWidth);
+                        
+                        if (splitText[0]) {
+                            doc.text(splitText[0], leftMargin + numberWidth + labelWidth, yPos);
+                        }
+                        
+                        for (let i = 1; i < splitText.length; i++) {
+                            yPos += lineHeight;
+                            if (yPos > pageHeight - bottomMargin) {
+                                doc.addPage();
+                                yPos = topMargin;
+                            }
+                            doc.text(splitText[i], leftMargin, yPos);
+                        }
+                        yPos += lineHeight;
+                    } else {
+                        // Handle numbered lines without colons
+                        const splitText = doc.splitTextToSize(line, contentWidth);
+                        splitText.forEach((textLine, i) => {
+                            if (yPos > pageHeight - bottomMargin) {
+                                doc.addPage();
+                                yPos = topMargin;
+                            }
+                            doc.text(textLine, leftMargin, yPos);
+                            yPos += lineHeight;
+                        });
+                    }
+                }
+                // Handle sub-items (a. and b.)
+                else if (line.trim().match(/^[ab]\./)) {
+                    const splitText = doc.splitTextToSize(line.trim(), contentWidth - 15);
+                    splitText.forEach((textLine, i) => {
+                        if (yPos > pageHeight - bottomMargin) {
+                            doc.addPage();
+                            yPos = topMargin;
+                        }
+                        doc.text(textLine, leftMargin + 15, yPos);
+                        yPos += lineHeight;
+                    });
+                }
+                // Handle empty lines
+                else if (line.trim() === '') {
+                    yPos += lineHeight * 0.5;
+                }
+                // Handle regular text
+                else if (line.trim()) {
+                    const splitText = doc.splitTextToSize(line, contentWidth);
+                    splitText.forEach((textLine) => {
+                        if (yPos > pageHeight - bottomMargin) {
+                            doc.addPage();
+                            yPos = topMargin;
+                        }
+                        doc.text(textLine, leftMargin, yPos);
+                        yPos += lineHeight;
+                    });
+                }
+            });
+            
+            // Save the PDF
             const artistName = document.getElementById('artistName').value.replace(/\s+/g, '_');
             const date = document.getElementById('date').value;
             const filename = `Deal_Memo_${artistName}_${date}.pdf`;
