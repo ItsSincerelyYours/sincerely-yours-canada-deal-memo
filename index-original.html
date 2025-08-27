@@ -16,36 +16,11 @@
             background: #f5f5f5;
         }
         
-        .login-container {
-            background: white;
-            padding: 60px 40px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            text-align: center;
-            max-width: 500px;
-            margin: 100px auto;
-        }
-        
-        .login-container h1 {
-            color: #333;
-            margin-bottom: 10px;
-        }
-        
-        .login-container p {
-            color: #666;
-            margin-bottom: 30px;
-        }
-        
         .container {
             background: white;
             padding: 30px;
             border-radius: 10px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            display: none;
-        }
-        
-        .container.authenticated {
-            display: block;
         }
         
         h1 {
@@ -61,15 +36,19 @@
             font-style: italic;
         }
         
-        .user-info {
+        .google-status {
             padding: 10px;
             margin: 20px 0;
             border-radius: 5px;
+            background: #f0f0f0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .google-status.connected {
             background: #d4edda;
             color: #155724;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
         }
         
         .form-section {
@@ -136,17 +115,6 @@
             background: #357ae8;
         }
         
-        .sign-out-btn {
-            background: #666;
-            padding: 8px 16px;
-            font-size: 14px;
-            margin: 0;
-        }
-        
-        .sign-out-btn:hover {
-            background: #555;
-        }
-        
         #output {
             margin-top: 30px;
             padding: 25px;
@@ -202,39 +170,17 @@
             margin: 15px 0;
             display: none;
         }
-        
-        .access-denied {
-            background: #f8d7da;
-            border: 1px solid #f5c6cb;
-            color: #721c24;
-            padding: 20px;
-            border-radius: 4px;
-            margin: 20px 0;
-            text-align: center;
-        }
     </style>
 </head>
 <body>
-    <!-- Login Screen -->
-    <div class="login-container" id="loginContainer">
-        <h1>🇨🇦 Sincerely Yours Canada</h1>
-        <p>Deal Memo Generator</p>
-        <p style="font-size: 14px; color: #888;">Access restricted to Sincerely Yours team members</p>
-        <div id="googleSignInDiv"></div>
-        <div class="error-message" id="loginError" style="margin-top: 20px;"></div>
-    </div>
-
-    <!-- Main App (Hidden until authenticated) -->
-    <div class="container" id="mainContainer">
+    <div class="container">
         <h1>🇨🇦 Sincerely Yours Canada - Deal Memo Generator</h1>
-        <div class="subtitle">Recording Agreement Deal Memo Template</div>
+        <div class="subtitle">Recording Agreement Deal Memo Template with Google Docs Integration</div>
         
-        <div class="user-info" id="userInfo">
-            <div>
-                <span>👤 Logged in as: </span>
-                <strong id="userEmail"></strong>
-            </div>
-            <button class="sign-out-btn" id="signOutBtn">Sign Out</button>
+        <div class="google-status" id="googleStatus">
+            <span>🔐</span>
+            <span id="statusText">Not connected to Google</span>
+            <button id="googleSignIn" class="google-btn" style="margin: 0; padding: 8px 20px;">Connect Google Account</button>
         </div>
         
         <div class="success-message" id="successMessage"></div>
@@ -402,116 +348,53 @@
     
     <script>
         // Google API Configuration
-        const CLIENT_ID = '464744009556-3cuv6q0s1tlvta2ig8rp61g6bkfm7v7k.apps.googleusercontent.com';
-        const API_KEY = 'AIzaSyCZcBYSS2Mkh2bRaISVdKLmLtwGD8PjIkQ';
+        const CLIENT_ID = '464744009556-3cuv6q0s1tlvta2ig8rp61g6bkfm7v7k.apps.googleusercontent.com'; // Your Client ID
+        const API_KEY = 'AIzaSyCZcBYSS2Mkh2bRaISVdKLmLtwGD8PjIkQ'; // Your API Key
         const DISCOVERY_DOCS = ['https://docs.googleapis.com/$discovery/rest?version=v1'];
-        const SCOPES = 'https://www.googleapis.com/auth/documents https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/userinfo.email';
+        const SCOPES = 'https://www.googleapis.com/auth/documents https://www.googleapis.com/auth/drive.file';
         
         let tokenClient;
         let accessToken = null;
-        let currentUser = null;
         
-        // Initialize Google Sign-In
-        function initializeGoogleSignIn() {
-            google.accounts.id.initialize({
-                client_id: CLIENT_ID,
-                callback: handleCredentialResponse,
-                auto_select: false,
-                cancel_on_tap_outside: true,
-            });
-            
-            google.accounts.id.renderButton(
-                document.getElementById("googleSignInDiv"),
-                { 
-                    theme: "filled_blue", 
-                    size: "large",
-                    text: "sign_in_with",
-                    shape: "rectangular",
-                    width: 300
-                }
-            );
-            
-            // Initialize token client for additional scopes
+        // Initialize Google API
+        function initializeGoogleAPI() {
             tokenClient = google.accounts.oauth2.initTokenClient({
                 client_id: CLIENT_ID,
                 scope: SCOPES,
                 callback: (response) => {
                     accessToken = response.access_token;
+                    updateGoogleStatus(true);
+                    showSuccess('Connected to Google successfully!');
                 },
             });
         }
         
-        // Handle Google Sign-In response
-        function handleCredentialResponse(response) {
-            // Decode JWT to get user info
-            const responsePayload = decodeJwtResponse(response.credential);
-            
-            // Check if email domain is @sincerely-yours.xyz
-            const email = responsePayload.email;
-            const emailDomain = email.split('@')[1];
-            
-            if (emailDomain !== 'sincerely-yours.xyz') {
-                showLoginError(`Access denied. This tool is only available to Sincerely Yours team members. You are signed in as ${email}`);
-                return;
+        // Handle Google Sign In
+        document.getElementById('googleSignIn').addEventListener('click', () => {
+            if (accessToken === null) {
+                tokenClient.requestAccessToken();
+            } else {
+                google.accounts.oauth2.revoke(accessToken, () => {
+                    accessToken = null;
+                    updateGoogleStatus(false);
+                });
             }
-            
-            // User is authorized
-            currentUser = {
-                email: email,
-                name: responsePayload.name,
-                picture: responsePayload.picture
-            };
-            
-            // Request additional permissions for Google Docs
-            tokenClient.requestAccessToken();
-            
-            // Show the main app
-            showMainApp();
-        }
+        });
         
-        // Decode JWT token
-        function decodeJwtResponse(token) {
-            const base64Url = token.split('.')[1];
-            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-            const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-            }).join(''));
+        // Update Google connection status
+        function updateGoogleStatus(connected) {
+            const statusDiv = document.getElementById('googleStatus');
+            const statusText = document.getElementById('statusText');
+            const signInBtn = document.getElementById('googleSignIn');
             
-            return JSON.parse(jsonPayload);
-        }
-        
-        // Show main app after successful authentication
-        function showMainApp() {
-            document.getElementById('loginContainer').style.display = 'none';
-            document.getElementById('mainContainer').classList.add('authenticated');
-            document.getElementById('userEmail').textContent = currentUser.email;
-        }
-        
-        // Show login error
-        function showLoginError(message) {
-            const errorDiv = document.getElementById('loginError');
-            errorDiv.textContent = message;
-            errorDiv.style.display = 'block';
-            setTimeout(() => {
-                errorDiv.style.display = 'none';
-            }, 10000);
-        }
-        
-        // Sign out
-        function signOut() {
-            google.accounts.id.disableAutoSelect();
-            currentUser = null;
-            accessToken = null;
-            document.getElementById('mainContainer').classList.remove('authenticated');
-            document.getElementById('loginContainer').style.display = 'block';
-            
-            // Clear form data
-            document.getElementById('artistName').value = '';
-            document.getElementById('email').value = '';
-            
-            // Revoke token if exists
-            if (accessToken) {
-                google.accounts.oauth2.revoke(accessToken);
+            if (connected) {
+                statusDiv.classList.add('connected');
+                statusText.textContent = 'Connected to Google';
+                signInBtn.textContent = 'Disconnect';
+            } else {
+                statusDiv.classList.remove('connected');
+                statusText.textContent = 'Not connected to Google';
+                signInBtn.textContent = 'Connect Google Account';
             }
         }
         
@@ -538,8 +421,7 @@
         // Create Google Doc
         async function createGoogleDoc() {
             if (!accessToken) {
-                showError('Please re-authenticate to create Google Docs');
-                tokenClient.requestAccessToken();
+                showError('Please connect your Google account first');
                 return;
             }
             
@@ -603,9 +485,11 @@
         
         // Format memo text for Google Docs API
         function formatMemoForGoogleDocs(memoText) {
+            // Split the memo into sections and create requests for formatting
             const requests = [];
             let insertIndex = 1;
             
+            // Insert all text first
             requests.push({
                 insertText: {
                     location: { index: insertIndex },
@@ -613,11 +497,14 @@
                 }
             });
             
+            // Add formatting requests (bold for headers, etc.)
+            // This is simplified - you can add more complex formatting as needed
             const lines = memoText.split('\n');
             let currentIndex = 1;
             
             lines.forEach(line => {
                 if (line.match(/^\d+\./)) {
+                    // Bold the section numbers and labels
                     const match = line.match(/^(\d+\.\s)([^:]+:)/);
                     if (match) {
                         const numberLength = match[1].length;
@@ -637,11 +524,14 @@
                         });
                     }
                 }
-                currentIndex += line.length + 1;
+                currentIndex += line.length + 1; // +1 for newline
             });
             
             return requests;
         }
+        
+        // Existing functions (buildMemoText, etc.) remain the same
+        // ... [Include all the existing JavaScript functions from the original file]
         
         // Update deal type
         document.getElementById('dealType').addEventListener('change', function() {
@@ -697,6 +587,7 @@
         
         // Build memo text for display/copy
         function buildMemoText() {
+            // [Include the complete buildMemoText function from the original file]
             // Get all values
             const artistName = document.getElementById('artistName').value;
             const date = document.getElementById('date').value;
@@ -728,17 +619,19 @@
                 return null;
             }
             
-            // Calculate payment schedule
+            // Calculate payment schedule (Canadian structure: first payment + balance)
             const advanceAmount = parseInt(totalAdvance);
-            const advanceThird = Math.floor(advanceAmount / 3);
-            const finalThirdPayment = advanceAmount - (advanceThird * 2);
+            const firstPayment = Math.ceil(advanceAmount / 2);
+            const balance = advanceAmount - firstPayment;
+            const firstThird = firstPayment; // Using firstThird variable name for compatibility
+            const secondThird = balance;
+            const finalThird = 0;
             
-            // Format all the fields
+            // Format all the fields (same as original)
             const territoryText = territory === 'custom' && customTerritory ? customTerritory : "The Universe";
             const dealTypeText = dealType === 'album' ? 'one studio album' : 
                                 dealType === 'ep' ? 'one EP' : 
                                 `${initialMasters} singles`;
-            
             // Format numbers as word (number)
             const numberToWord = (num) => {
                 const numbers = {
@@ -760,11 +653,18 @@
             
             let optionText = '';
             if (parseInt(optionPeriods) > 0) {
-                const optionWord = parseInt(optionPeriods) === 1 ? 'one (1)' : numberToWord(optionPeriods);
-                optionText = ` In addition, Sincerely Yours would have ${optionWord} option to extend the agreement to include an additional ${optionMastersText} to be delivered in respect of such option. Option Masters shall not be released earlier than six (6) months after the release of the last Master delivered as part of the Initial Commitment.`;
+                const optionWord = parseInt(optionPeriods) === 1 ? 'one (1) option' : `${optionPeriods} options`;
+                optionText = ` In addition, Sincerely Yours would have ${optionWord} to extend the agreement to include an additional ${optionMastersText} to be delivered in respect of such option. Option Masters shall not be released earlier than six (6) months after the release of the last Master delivered as part of the Initial Commitment`;
             }
             
-            // Build the complete memo (Canadian version)
+            const merchText = merchShare ? ` Additionally, ${merchShare}% of Net Profits in connection with merchandise revenue.` : '';
+            const profitsSection = `${netProfit}% of Net Profits (to be defined in the Agreement) in connection with the Masters, and ${syncProfit}% of Net Profits in connection with revenue collected from third party sync licenses.${merchText} Unless otherwise agreed between the parties in writing, you will be responsible for paying all producers, mixers and side artists in connection with the Masters.`;
+            
+            // Calculate thirds for advance payment
+            const advanceThird = Math.floor(advanceAmount / 3);
+            const finalThirdPayment = advanceAmount - (advanceThird * 2);
+            
+            // Build the complete memo (Canadian version - exact template format)
             const memo = `                    ${formatDate(date)}
 
 Sincerely Yours Media Canada Inc.
@@ -785,7 +685,7 @@ Begins on the Effective Date (to be defined in the Agreement) and continues unti
 
 **3.) Delivery Commitment**
 
-You will Deliver (to be defined in the Agreement) to Sincerely Yours ${mastersText} Masters (the "Initial Commitment").${optionText}
+You will Deliver (to be defined in the Agreement) to Sincerely Yours ${mastersText} Masters (the "Initial Commitment").${optionText ? ' In addition, Sincerely Yours would have ' + numberToWord(optionPeriods) + ' option to extend the agreement to include an additional ' + optionMastersText + ' to be delivered in respect of such option. Option Masters shall not be released earlier than six (6) months after the release of the last Master delivered as part of the Initial Commitment.' : ''}
 
 **4.) Advance**
 
@@ -813,7 +713,7 @@ Sincerely Yours shall have the exclusive right during the licensing period (defi
 
 **10.) First Negotiation/Matching Right**
 
-During the Term, and for a period of ${numberToWord(firstNegotiationPeriod)} months following the expiration or termination of the Term, prior to entering into negotiations with any third party with respect to your recording services and/or the rights in and to the masters, you shall first notify Sincerely Yours that you would like to negotiate such an agreement, after which you shall negotiate with Sincerely Yours exclusively for ${numberToWord(negotiationDays)} days.
+During the Term, and for a period of six (6) months following the expiration or termination of the Term, prior to entering into negotiations with any third party with respect to your recording services and/or the rights in and to the masters, you shall first notify Sincerely Yours that you would like to negotiate such an agreement, after which you shall negotiate with Sincerely Yours exclusively for ${numberToWord(negotiationDays)} days.
 
     a. If, by the expiration of such ${negotiationDays}-day period, no agreement is reached between you and us, you may negotiate with third parties an agreement with respect to your recording services and/or the right to exploit Masters, but may not enter into an agreement with any third party other than Sincerely Yours unless you first: (i) notify Sincerely Yours in writing of the material terms of the proposed agreement pursuant to which such rights are to be granted and the identities of all proposed parties to such agreement ("Third-Party Offer"); and (ii) offer to enter into an agreement with Sincerely Yours on the same material financial terms as the Third-Party Offer ("Matching Right").
 
@@ -824,8 +724,9 @@ Please note that I must reserve the right for Sincerely Yours senior management 
             return memo;
         }
         
-        // Generate PDF
+        // Generate PDF (include the complete generateMemo function from original)
         function generateMemo() {
+            // [Include complete generateMemo function]
             const memoText = buildMemoText();
             if (!memoText) return;
             
@@ -859,15 +760,15 @@ Please note that I must reserve the right for Sincerely Yours senior management 
                     yPos = topMargin;
                 }
                 
-                // Handle date line (right-aligned)
+                // Handle date line (right-aligned with spaces)
                 if (line.includes('                    ') && index === 0) {
                     doc.setFont("helvetica", "normal");
                     const dateText = line.trim();
                     const dateWidth = doc.getTextWidth(dateText);
                     doc.text(dateText, pageWidth - rightMargin - dateWidth, yPos);
-                    yPos += lineHeight * 2;
+                    yPos += lineHeight * 2; // Extra space after date
                 }
-                // Handle company header
+                // Handle company header (center-aligned)
                 else if (index > 0 && index < 7 && (line.includes('Sincerely Yours') || line.includes('Taylor Oballa') || 
                     line.includes('171 East') || line.includes('Toronto'))) {
                     doc.setFont("helvetica", "normal");
@@ -875,18 +776,24 @@ Please note that I must reserve the right for Sincerely Yours senior management 
                     const xPos = (pageWidth - textWidth) / 2;
                     doc.text(line, xPos, yPos);
                     yPos += lineHeight;
-                    if (index === 6) yPos += lineHeight * 2;
+                    if (index === 6) yPos += lineHeight * 2; // Extra space after header
                 }
-                // Handle section headers with bold formatting
+                // Handle VIA EMAIL line
+                else if (line.startsWith('VIA EMAIL:')) {
+                    yPos += paragraphSpacing;
+                    doc.text(line, leftMargin, yPos);
+                    yPos += lineHeight;
+                }
+                // Handle section headers with bold formatting (marked with **)
                 else if (line.includes('**') && /\d+\.\)/.test(line)) {
                     yPos += paragraphSpacing;
-                    const cleanLine = line.replace(/\*\*/g, '');
+                    const cleanLine = line.replace(/\*\*/g, ''); // Remove ** markers
                     doc.setFont("helvetica", "bold");
                     doc.text(cleanLine, leftMargin, yPos);
                     doc.setFont("helvetica", "normal");
                     yPos += lineHeight;
                 }
-                // Handle sub-items
+                // Handle sub-items (a. and b.) with proper indentation
                 else if (line.trim().match(/^\s*[ab]\./)) {
                     doc.setFont("helvetica", "normal");
                     const splitText = doc.splitTextToSize(line.trim(), contentWidth - 20);
@@ -951,22 +858,13 @@ Please note that I must reserve the right for Sincerely Yours senior management 
             // Set today's date
             document.getElementById('date').valueAsDate = new Date();
             
-            // Initialize Google Sign-In
-            initializeGoogleSignIn();
-            
-            // Load Google API
-            gapi.load('client', () => {
-                gapi.client.init({
-                    apiKey: API_KEY,
-                    discoveryDocs: DISCOVERY_DOCS,
-                });
-            });
+            // Initialize Google API
+            gapi.load('client', initializeGoogleAPI);
             
             // Attach button handlers
             document.getElementById('generatePdfBtn').addEventListener('click', generateMemo);
             document.getElementById('copyBtn').addEventListener('click', generateAndCopy);
             document.getElementById('createGoogleDocBtn').addEventListener('click', createGoogleDoc);
-            document.getElementById('signOutBtn').addEventListener('click', signOut);
         });
     </script>
 </body>
