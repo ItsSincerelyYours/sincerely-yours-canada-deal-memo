@@ -656,12 +656,11 @@
             const merchText = merchShare ? ` Additionally, ${merchShare}% of Net Profits in connection with merchandise revenue.` : '';
             const profitsSection = `${netProfit}% of Net Profits (to be defined in the Agreement) in connection with the Masters, and ${syncProfit}% of Net Profits in connection with revenue collected from third party sync licenses.${merchText} Unless otherwise agreed between the parties in writing, you will be responsible for paying all producers, mixers and side artists in connection with the Masters.`;
             
-            // Build the complete memo (Canadian version)
+            // Build the complete memo (Canadian version - exact template format)
             const memo = `Sincerely Yours Media Canada Inc.
 c/o Taylor Oballa Murray Leyland LLP
 171 East Liberty Street, Suite 330
 Toronto, ON, M6K 3P6
-
 
 Date: ${formatDate(date)}
 
@@ -669,27 +668,27 @@ ${emailLine}
 
 This proposal sets forth the material terms pursuant to which Sincerely Yours Media Canada Inc. ("us" or "Sincerely Yours") will enter into an agreement with the recording artist professionally known as "${artistName}" ("you" or "Artist") in respect of master recordings ("Masters") featuring their performance.
 
-• Territory: ${territoryText}.
+1. Territory: ${territoryText}.
 
-• Exclusive Period: Begins on the Effective Date (to be defined in the Agreement) and continues until ${exclusivePeriod} ${exclusivePeriod == '1' ? 'month' : 'months'} from the release date of the last Master released under the Agreement (the "Term").
+2. Exclusive Period: Begins on the Effective Date (to be defined in the Agreement) and continues until ${exclusivePeriod} (${exclusivePeriod}) ${exclusivePeriod == '1' ? 'month' : 'months'} from the release date of the last Master released under the Agreement (the "Term").
 
-• Delivery Commitment: You will Deliver (to be defined in the Agreement) to Sincerely Yours ${mastersText} Masters (the "Initial Commitment").${optionText ? ' In addition, Sincerely Yours would have ' + (parseInt(optionPeriods) === 1 ? 'one (1) option' : optionPeriods + ' options') + ' to extend the agreement to include an additional ' + optionMastersText + ' to be delivered in respect of such option. Option Masters shall not be released earlier than six (6) months after the release of the last Master delivered as part of the Initial Commitment' : ''}
+3. Delivery Commitment: You will Deliver (to be defined in the Agreement) to Sincerely Yours ${mastersText} (${initialMasters}) Masters (the "Initial Commitment").${optionText ? ' In addition, Sincerely Yours would have ' + (parseInt(optionPeriods) === 1 ? 'one (1)' : optionPeriods + ' (' + optionPeriods + ')') + ' option to extend the agreement to include an additional ' + optionMastersText + ' to be delivered in respect of such option. Option Masters shall not be released earlier than six (6) months after the release of the last Master delivered as part of the Initial Commitment' : ''}
 
-• Advance/Recording Costs: Sincerely Yours would pay you an advance of ${formatNumber(totalAdvance, true)} during each contract period, which amount would be paid to you as follows: ${formatNumber(firstThird, true)} following the commencement of such period and the balance following Delivery of the recording commitment for such contract period. In addition, Sincerely Yours would make available a budget of up to ${formatNumber(recordingBudget, true)} to be used in connection with recording costs during each Contract Period, which amount would be administered by Sincerely Yours.
+4. Advance/Recording Costs: Sincerely Yours would pay you an advance of ${formatNumber(totalAdvance, true)} during each contract period, which amount would be paid to you as follows: ${formatNumber(firstThird, true)} following the commencement of such period and the balance following Delivery of the recording commitment for such contract period. In addition, Sincerely Yours would make available a budget of up to ${formatNumber(recordingBudget, true)} to be used in connection with recording costs during each Contract Period, which amount would be administered by Sincerely Yours.
 
-• Marketing Costs: ${formatNumber(marketingBudget, true)} drawdown fund (the "Marketing Fund") to be used, at our sole discretion, for marketing, advertising and promotion costs in connection with the Recording Commitment during each contract period. The Marketing Fund will be deemed a recoupable advance against your share of Net Profits.
+5. Marketing Costs: ${formatNumber(marketingBudget, true)} drawdown fund (the "Marketing Fund") to be used, at our sole discretion, for marketing, advertising and promotion costs in connection with the Recording Commitment during each contract period. The Marketing Fund will be deemed a recoupable advance against your share of Net Profits.
 
-• Profits: ${netProfit}% of Net Profits (to be defined in the Agreement) received by us in connection with the Masters. Unless otherwise agreed between the parties in writing, you will be responsible for paying all producers, mixers and side artists in connection with the Masters.
+6. Profits: ${netProfit}% of Net Profits (to be defined in the Agreement) received by us in connection with the Masters. Unless otherwise agreed between the parties in writing, you will be responsible for paying all producers, mixers and side artists in connection with the Masters.
 
-• Accounting: Semi-annually, within 90 days of the applicable accounting period.
+7. Accounting: Semi-annually, within 90 days of the applicable accounting period.
 
-• Rights; Licensing Period: We shall have the exclusive right during the Licensing Period (defined below) to exploit the Masters made during and/or prior to the Term and Delivered during the Term. "Licensing Period" means the period commencing on the Effective Date and continues until the later of: (A) ${licensingYears == '15' ? 'fifteen (15)' : licensingYears == '25' ? 'twenty five (25)' : licensingYears} years following the commencement of the Term; or (B) the end of the semi-annual accounting period during which your royalty account became fully recouped.
+8. Rights; Licensing Period: We shall have the exclusive right during the Licensing Period (defined below) to exploit the Masters made during and/or prior to the Term and Delivered during the Term. "Licensing Period" means the period commencing on the Effective Date and continues until the later of: (A) ${licensingYears} (${licensingYears}) years following the commencement of the Term; or (B) the end of the semi-annual accounting period during which your royalty account became fully recouped.
 
-• First Negotiation/Matching Right: During the Term, and for a period of six (6) months following the expiration or termination of the Term, prior to entering into negotiations with any third party with respect to your recording services and/or the rights in and to the Masters, you shall first notify us that you would like to negotiate such an agreement, after which you shall negotiate with us exclusively for ${negotiationDays} days.
+9. First Negotiation/Matching Right: During the Term, and for a period of six (6) months following the expiration or termination of the Term, prior to entering into negotiations with any third party with respect to your recording services and/or the rights in and to the Masters, you shall first notify us that you would like to negotiate such an agreement, after which you shall negotiate with us exclusively for ${negotiationDays} days.
 
-• If, by the expiration of such ${negotiationDays}-day period, no agreement is reached between you and us, you may negotiate with third parties an agreement with respect to your recording services and/or the right to exploit Masters, but may not enter into an agreement with any third party other than us unless you first: (i) notify us in writing of the material terms of the proposed agreement pursuant to which such rights are to be granted and the identities of all proposed parties to such agreement ("Third-Party Offer"); and (ii) offer to enter into an agreement with us on the same material financial terms as the Third-Party Offer ("Matching Right").
+    a. If, by the expiration of such ${negotiationDays}-day period, no agreement is reached between you and us, you may negotiate with third parties an agreement with respect to your recording services and/or the right to exploit Masters, but may not enter into an agreement with any third party other than us unless you first: (i) notify us in writing of the material terms of the proposed agreement pursuant to which such rights are to be granted and the identities of all proposed parties to such agreement ("Third-Party Offer"); and (ii) offer to enter into an agreement with us on the same material financial terms as the Third-Party Offer ("Matching Right").
 
-• If we do not accept the Third-Party Offer within ${matchingDays == '15' ? 'fifteen (15)' : matchingDays} business days after we receive such Third-Party Offer, you may then enter into the agreement set forth in the Third-Party Offer, provided that such agreement is consummated upon the same or better terms (for you) and in the same form set forth in the Third-Party Offer.
+    b. If we do not accept the Third-Party Offer within ${matchingDays == '15' ? 'fifteen (15)' : matchingDays + ' (' + matchingDays + ')'} business days after we receive such Third-Party Offer, you may then enter into the agreement set forth in the Third-Party Offer, provided that such agreement is consummated upon the same or better terms (for you) and in the same form set forth in the Third-Party Offer.
 
 Please note that I must reserve the right for Sincerely Yours senior management to modify the terms suggested herein.`;
             
@@ -751,67 +750,30 @@ Please note that I must reserve the right for Sincerely Yours senior management 
                     doc.text(line, leftMargin, yPos);
                     yPos += lineHeight;
                 }
-                // Handle numbered sections
+                // Handle numbered sections (no bold formatting)
                 else if (/^\d+\./.test(line)) {
                     yPos += paragraphSpacing;
-                    // Extract number and label
-                    const match = line.match(/^(\d+\.\s)([^:]+:)(.*)/);
-                    if (match) {
-                        const number = match[1];
-                        const label = match[2];
-                        const content = match[3];
-                        
-                        // Draw number
-                        doc.setFont("helvetica", "normal");
-                        doc.text(number, leftMargin, yPos);
-                        
-                        // Draw label in bold with underline
-                        const numberWidth = doc.getTextWidth(number);
-                        doc.setFont("helvetica", "bold");
-                        doc.text(label, leftMargin + numberWidth, yPos);
-                        const labelWidth = doc.getTextWidth(label);
-                        doc.line(leftMargin + numberWidth, yPos + 0.5, leftMargin + numberWidth + labelWidth, yPos + 0.5);
-                        
-                        // Draw content
-                        doc.setFont("helvetica", "normal");
-                        const remainingText = content;
-                        const splitText = doc.splitTextToSize(remainingText, contentWidth - numberWidth - labelWidth);
-                        
-                        if (splitText[0]) {
-                            doc.text(splitText[0], leftMargin + numberWidth + labelWidth, yPos);
-                        }
-                        
-                        for (let i = 1; i < splitText.length; i++) {
-                            yPos += lineHeight;
-                            if (yPos > pageHeight - bottomMargin) {
-                                doc.addPage();
-                                yPos = topMargin;
-                            }
-                            doc.text(splitText[i], leftMargin, yPos);
-                        }
-                        yPos += lineHeight;
-                    } else {
-                        // Handle numbered lines without colons
-                        const splitText = doc.splitTextToSize(line, contentWidth);
-                        splitText.forEach((textLine, i) => {
-                            if (yPos > pageHeight - bottomMargin) {
-                                doc.addPage();
-                                yPos = topMargin;
-                            }
-                            doc.text(textLine, leftMargin, yPos);
-                            yPos += lineHeight;
-                        });
-                    }
-                }
-                // Handle sub-items (a. and b.)
-                else if (line.trim().match(/^[ab]\./)) {
-                    const splitText = doc.splitTextToSize(line.trim(), contentWidth - 15);
+                    doc.setFont("helvetica", "normal");
+                    const splitText = doc.splitTextToSize(line, contentWidth);
                     splitText.forEach((textLine, i) => {
                         if (yPos > pageHeight - bottomMargin) {
                             doc.addPage();
                             yPos = topMargin;
                         }
-                        doc.text(textLine, leftMargin + 15, yPos);
+                        doc.text(textLine, leftMargin, yPos);
+                        yPos += lineHeight;
+                    });
+                }
+                // Handle sub-items (a. and b.) with proper indentation
+                else if (line.trim().match(/^\s*[ab]\./)) {
+                    doc.setFont("helvetica", "normal");
+                    const splitText = doc.splitTextToSize(line.trim(), contentWidth - 20);
+                    splitText.forEach((textLine, i) => {
+                        if (yPos > pageHeight - bottomMargin) {
+                            doc.addPage();
+                            yPos = topMargin;
+                        }
+                        doc.text(textLine, leftMargin + 20, yPos);
                         yPos += lineHeight;
                     });
                 }
