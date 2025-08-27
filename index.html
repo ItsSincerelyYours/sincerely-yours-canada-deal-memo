@@ -25,7 +25,7 @@
         
         h1 {
             color: #333;
-            border-bottom: 3px solid #6B46C1;
+            border-bottom: 3px solid #dc143c;
             padding-bottom: 10px;
             margin-bottom: 10px;
         }
@@ -56,7 +56,7 @@
             padding: 20px;
             background: #f9f9f9;
             border-radius: 5px;
-            border-left: 4px solid #6B46C1;
+            border-left: 4px solid #dc143c;
         }
         
         .form-section h3 {
@@ -92,7 +92,7 @@
         }
         
         button {
-            background: #6B46C1;
+            background: #dc143c;
             color: white;
             padding: 12px 30px;
             border: none;
@@ -104,7 +104,7 @@
         }
         
         button:hover {
-            background: #553396;
+            background: #b91c3c;
         }
         
         .google-btn {
@@ -261,16 +261,16 @@
             <div class="form-row">
                 <div>
                     <label>Artist Advance ($) *</label>
-                    <input type="number" id="totalAdvance" value="25000" min="0" required>
-                    <div class="info-text">Will be split into thirds</div>
+                    <input type="number" id="totalAdvance" value="5000" min="0" required>
+                    <div class="info-text">Split: first payment on signing, balance on delivery</div>
                 </div>
                 <div>
                     <label>Recording Budget ($) *</label>
-                    <input type="number" id="recordingBudget" value="25000" min="0" required>
+                    <input type="number" id="recordingBudget" value="5000" min="0" required>
                 </div>
                 <div>
                     <label>Marketing Budget ($) *</label>
-                    <input type="number" id="marketingBudget" value="30000" min="0" required>
+                    <input type="number" id="marketingBudget" value="5000" min="0" required>
                 </div>
             </div>
         </div>
@@ -332,7 +332,7 @@
             <div class="form-row">
                 <div>
                     <label>Signed By</label>
-                    <input type="text" id="signatory" value="Lynn Gonzalez">
+                    <input type="text" id="signatory" value="">
                 </div>
             </div>
         </div>
@@ -571,9 +571,9 @@
             }
         });
         
-        // Format number with dollar sign
-        function formatNumber(num) {
-            return '$' + parseInt(num).toLocaleString();
+        // Format number with dollar sign and CAD
+        function formatNumber(num, includeCurrency = false) {
+            return '$' + parseInt(num).toLocaleString() + (includeCurrency ? ' CAD' : '');
         }
         
         // Format date
@@ -619,11 +619,13 @@
                 return null;
             }
             
-            // Calculate payment schedule
+            // Calculate payment schedule (Canadian structure: first payment + balance)
             const advanceAmount = parseInt(totalAdvance);
-            const firstThird = Math.ceil(advanceAmount / 3);
-            const secondThird = Math.floor(advanceAmount / 3);
-            const finalThird = advanceAmount - firstThird - secondThird;
+            const firstPayment = Math.ceil(advanceAmount / 2);
+            const balance = advanceAmount - firstPayment;
+            const firstThird = firstPayment; // Using firstThird variable name for compatibility
+            const secondThird = balance;
+            const finalThird = 0;
             
             // Format all the fields (same as original)
             const territoryText = territory === 'custom' && customTerritory ? customTerritory : "The Universe";
@@ -647,55 +649,49 @@
             let optionText = '';
             if (parseInt(optionPeriods) > 0) {
                 const optionWord = parseInt(optionPeriods) === 1 ? 'one (1) option' : `${optionPeriods} options`;
-                optionText = ` In addition, Sincerely Yours would have ${optionWord} to extend the agreement to include an additional ${optionMastersText} in respect of such option.`;
+                optionText = ` In addition, Sincerely Yours would have ${optionWord} to extend the agreement to include an additional ${optionMastersText} to be delivered in respect of such option. Option Masters shall not be released earlier than six (6) months after the release of the last Master delivered as part of the Initial Commitment`;
             }
             
             const emailLine = email ? `VIA EMAIL: ${email}` : 'VIA EMAIL: ____________________';
             const merchText = merchShare ? ` Additionally, ${merchShare}% of Net Profits in connection with merchandise revenue.` : '';
             const profitsSection = `${netProfit}% of Net Profits (to be defined in the Agreement) in connection with the Masters, and ${syncProfit}% of Net Profits in connection with revenue collected from third party sync licenses.${merchText} Unless otherwise agreed between the parties in writing, you will be responsible for paying all producers, mixers and side artists in connection with the Masters.`;
             
-            // Build the complete memo (same as original)
-            const memo = `Sincerely Yours Media LLC
-c/o Granderson Des Rochers LLP
-150 S. Rodeo Drive, Suite 300
-Beverly Hills, CA 90212
+            // Build the complete memo (Canadian version)
+            const memo = `Sincerely Yours Media Canada Inc.
+c/o Taylor Oballa Murray Leyland LLP
+171 East Liberty Street, Suite 330
+Toronto, ON, M6K 3P6
 
 
 Date: ${formatDate(date)}
 
 ${emailLine}
 
-This proposal sets forth the material terms pursuant to which Sincerely Yours Media LLC ("us" or "Sincerely Yours") will enter into an agreement with the recording artist professionally known as "${artistName}" ("you" or "Artist") in respect of master recordings ("Masters") featuring their performance.
+This proposal sets forth the material terms pursuant to which Sincerely Yours Media Canada Inc. ("us" or "Sincerely Yours") will enter into an agreement with the recording artist professionally known as "${artistName}" ("you" or "Artist") in respect of master recordings ("Masters") featuring their performance.
 
-1. Territory: ${territoryText}.
+• Territory: ${territoryText}.
 
-2. Exclusive Period: Begins on the Effective Date (to be defined in the Agreement) and continues until ${exclusivePeriod} months from the release date of the last Master released under the Agreement (the "Term").
+• Exclusive Period: Begins on the Effective Date (to be defined in the Agreement) and continues until ${exclusivePeriod} ${exclusivePeriod == '1' ? 'month' : 'months'} from the release date of the last Master released under the Agreement (the "Term").
 
-3. Delivery Commitment: you will Deliver (to be defined in the Agreement) to Sincerely Yours ${dealTypeText} that includes no less than ${mastersText} Masters${catalogText} (the "Initial Period").${optionText}
+• Delivery Commitment: You will Deliver (to be defined in the Agreement) to Sincerely Yours ${mastersText} Masters (the "Initial Commitment").${optionText ? ' In addition, Sincerely Yours would have ' + (parseInt(optionPeriods) === 1 ? 'one (1) option' : optionPeriods + ' options') + ' to extend the agreement to include an additional ' + optionMastersText + ' to be delivered in respect of such option. Option Masters shall not be released earlier than six (6) months after the release of the last Master delivered as part of the Initial Commitment' : ''}
 
-4. Advance: Sincerely Yours would pay you an advance of ${formatNumber(totalAdvance)} during each contract period, which amount would be paid to you as follows: one-third (1/3) of the advance (${formatNumber(firstThird)}) upon signing of this agreement for such contract period, one-third (1/3) of the advance (${formatNumber(secondThird)}) following Delivery of cleared records for such contract period, and the final one-third (1/3) of the advance (${formatNumber(finalThird)}) upon commercial release of the recording commitment for such contract period.
+• Advance/Recording Costs: Sincerely Yours would pay you an advance of ${formatNumber(totalAdvance, true)} during each contract period, which amount would be paid to you as follows: ${formatNumber(firstThird, true)} following the commencement of such period and the balance following Delivery of the recording commitment for such contract period. In addition, Sincerely Yours would make available a budget of up to ${formatNumber(recordingBudget, true)} to be used in connection with recording costs during each Contract Period, which amount would be administered by Sincerely Yours.
 
-5. Recording Costs: Sincerely Yours would make available a budget of up to ${formatNumber(recordingBudget)} to be used in connection with recording costs during each Contract Period, which amount would be administered by Sincerely Yours.
+• Marketing Costs: ${formatNumber(marketingBudget, true)} drawdown fund (the "Marketing Fund") to be used, at our sole discretion, for marketing, advertising and promotion costs in connection with the Recording Commitment during each contract period. The Marketing Fund will be deemed a recoupable advance against your share of Net Profits.
 
-6. Marketing Costs: ${formatNumber(marketingBudget)} drawdown fund (the "Advance") to be used, at our sole discretion, for marketing, advertising and promotion costs in connection with the Recording Commitment during each contract period. The Advance will be deemed a recoupable advance against your share of Net Profits.
+• Profits: ${netProfit}% of Net Profits (to be defined in the Agreement) received by us in connection with the Masters. Unless otherwise agreed between the parties in writing, you will be responsible for paying all producers, mixers and side artists in connection with the Masters.
 
-7. Profits: ${profitsSection}
+• Accounting: Semi-annually, within 90 days of the applicable accounting period.
 
-8. Accounting: Semi-annually, within 90 days of the applicable accounting period.
+• Rights; Licensing Period: We shall have the exclusive right during the Licensing Period (defined below) to exploit the Masters made during and/or prior to the Term and Delivered during the Term. "Licensing Period" means the period commencing on the Effective Date and continues until the later of: (A) ${licensingYears == '15' ? 'fifteen (15)' : licensingYears == '25' ? 'twenty five (25)' : licensingYears} years following the commencement of the Term; or (B) the end of the semi-annual accounting period during which your royalty account became fully recouped.
 
-9. Rights;Licensing Period: We shall have the exclusive right during the Licensing Period (defined below) to exploit the Masters made during and/or prior to the Term and Delivered during the Term. "Licensing Period" means the period commencing on the Effective Date and continues until the later of: (A) ${licensingYears == '15' ? 'fifteen (15)' : licensingYears == '25' ? 'twenty five (25)' : licensingYears} years following the commencement of the Term; or (B) the end of the semi-annual accounting period during which your royalty account became fully recouped.
+• First Negotiation/Matching Right: During the Term, and for a period of six (6) months following the expiration or termination of the Term, prior to entering into negotiations with any third party with respect to your recording services and/or the rights in and to the Masters, you shall first notify us that you would like to negotiate such an agreement, after which you shall negotiate with us exclusively for ${negotiationDays} days.
 
-10. First Negotiation/Matching Right: During the Term, and for a period of ${firstNegotiationPeriod == '3' ? 'three (3)' : 'six (6)'} months following the expiration or termination of the Term, prior to entering into negotiations with any third party with respect to your recording services and/or the rights in and to the Masters, you shall first notify us that you would like to negotiate such an agreement, after which you shall negotiate with us exclusively for ${negotiationDays} days.
+• If, by the expiration of such ${negotiationDays}-day period, no agreement is reached between you and us, you may negotiate with third parties an agreement with respect to your recording services and/or the right to exploit Masters, but may not enter into an agreement with any third party other than us unless you first: (i) notify us in writing of the material terms of the proposed agreement pursuant to which such rights are to be granted and the identities of all proposed parties to such agreement ("Third-Party Offer"); and (ii) offer to enter into an agreement with us on the same material financial terms as the Third-Party Offer ("Matching Right").
 
-    a. If, by the expiration of such ${negotiationDays}-day period, no agreement is reached between you and us, you may negotiate with third parties an agreement with respect to your recording services and/or the right to exploit Masters, but may not enter into an agreement with any third party other than us unless you first: (i) notify us in writing of the material terms of the proposed agreement pursuant to which such rights are to be granted and the identities of all proposed parties to such agreement ("Third-Party Offer"); and (ii) offer to enter into an agreement with us on the same material financial terms as the Third-Party Offer ("Matching Right").
+• If we do not accept the Third-Party Offer within ${matchingDays == '15' ? 'fifteen (15)' : matchingDays} business days after we receive such Third-Party Offer, you may then enter into the agreement set forth in the Third-Party Offer, provided that such agreement is consummated upon the same or better terms (for you) and in the same form set forth in the Third-Party Offer.
 
-    b. If we do not accept the Third-Party Offer within ${matchingDays == '15' ? 'fifteen (15)' : matchingDays} business days after we receive such Third-Party Offer, you may then enter into the agreement set forth in the Third-Party Offer, provided that such agreement is consummated upon the same or better terms (for you) and in the same form set forth in the Third-Party Offer.
-
-Please note that I must reserve the right for Sincerely Yours senior management to modify the terms suggested herein.
-
-Best,
-
-${signatory}`;
+Please note that I must reserve the right for Sincerely Yours senior management to modify the terms suggested herein.`;
             
             return memo;
         }
